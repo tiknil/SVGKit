@@ -185,8 +185,6 @@
     [self removeObserver:self forKeyPath:@"showBorder" context:internalContextPointerBecauseApplesDemandsIt];
   }
 
-
-  
   [_image removeObserver:self forKeyPath:@"size" context:internalContextPointerBecauseApplesDemandsIt];
   [_image release];
 	_image = nil;
@@ -291,6 +289,8 @@
 			CGContextTranslateCTM(context, i * tileSize.width, k * tileSize.height );
 			CGContextScaleCTM( context, scaleConvertImageToView.width, scaleConvertImageToView.height );
 			
+            [self checkInfinityPositionForLayer:self.image.CALayerTree];
+            
 			[self.image.CALayerTree renderInContext:context];
 			
 			CGContextRestoreGState(context);
@@ -306,5 +306,21 @@
 	self.endRenderTime = [NSDate date];
 	self.timeIntervalForLastReRenderOfSVGFromMemory = [self.endRenderTime timeIntervalSinceDate:self.startRenderTime];
 }
+
+- (void) checkInfinityPositionForLayer:(CALayer*)layer
+{
+    if (layer != nil) {
+        if (layer.sublayers != nil) {
+            for (CALayer *item in layer.sublayers) {
+                if (CGPointEqualToPoint(item.position, CGPointMake(INFINITY, INFINITY))) {
+                    NSLog(@"WARNING INFINITE!");
+                    item.position = CGPointZero;
+                }
+                [self checkInfinityPositionForLayer:item];
+            }
+        }
+    }
+}
+
 
 @end
